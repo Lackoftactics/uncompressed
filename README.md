@@ -1,8 +1,37 @@
-# homelab
+# uncompressed
 
-Production Docker infrastructure: 17 containers, 8 stacks, self-healing, VPN-isolated media pipeline, geo-routed tunnels. Runs on Unraid with zero-trust networking via Tailscale.
+Self-healing, high-quality media pipeline.
 
-Built because streaming services compress 4K content to 15-25 Mbps. A Blu-ray remux is 60-80 Mbps. I wanted full control over quality, availability, and the request pipeline.
+Streaming services compress 4K to 15-25 Mbps. A Blu-ray remux is 60-80 Mbps. I built a self-healing media pipeline that serves full-quality remuxes to my family with a Netflix-like request interface — and they have no idea it's not a commercial service.
+
+17 containers across 8 Docker Compose stacks, running on Unraid. Zero-trust networking via Tailscale, VPN-isolated torrenting with leak-proof namespace isolation, and a YouTube geo-bypass tunnel that selectively routes only Google's IP ranges through Albania.
+
+## The Problem
+
+I kept running into the same frustrations with streaming:
+
+- **Quality** — 4K on Netflix/Disney+ is 15-25 Mbps HEVC. A UHD Blu-ray remux is 60-80 Mbps. The difference is obvious on a decent display, especially in dark scenes where streaming artifacts crush shadow detail.
+- **Availability** — Content disappears when licensing deals expire. Shows split across 5+ services. Regional libraries vary wildly.
+- **Control** — No way to choose audio tracks, subtitle sources, or playback behavior. Algorithmic recommendations over catalog browsing.
+
+I wanted something where my family could open an app, search for a movie, hit "request", and have it appear in their library — with Blu-ray quality, automated subtitles in multiple languages, and zero maintenance on their end.
+
+## How It Works
+
+The core is a **9-container arr stack** that automates the entire pipeline:
+
+```
+Family member opens Overseerr → requests a movie
+  → Radarr picks it up, searches Prowlarr for indexers
+    → qBittorrent downloads through VPN tunnel (gluetun namespace)
+      → Radarr imports, renames, organizes
+        → Bazarr fetches subtitles
+          → Jellyfin serves it with hardware transcoding
+```
+
+For TV shows, Sonarr does the same thing — monitors series, grabs new episodes automatically, and Jellyfin updates in real time.
+
+The whole pipeline is self-healing. If any container goes down, it gets restarted automatically. If the VPN drops, torrent traffic stops dead — it physically cannot route outside the tunnel.
 
 ## Architecture
 
@@ -34,7 +63,7 @@ Built because streaming services compress 4K content to 15-25 Mbps. A Blu-ray re
                           │
                  ┌────────┴────────┐
                  │   qBittorrent   │  network_mode: service:gluetun
-                 │  bound to tun0  │  (VPN namespace isolation)
+                 │  bound to tun0  │  (namespace isolation)
                  └────────┬────────┘
                           │
   ┌───────────────────────┼───────────────────────────┐
@@ -54,40 +83,24 @@ Built because streaming services compress 4K content to 15-25 Mbps. A Blu-ray re
   └───────────────────────────────────────────────────┘
 ```
 
-Three distinct traffic paths:
+Three traffic paths, each isolated:
 
 1. **HTTPS ingress** — Cloudflare DNS → Tailscale mesh → Traefik (bound to Tailscale IP only, not `0.0.0.0`) → service by hostname
 2. **P2P egress** — qBittorrent → gluetun network namespace (`tun0` binding) → ProtonVPN WireGuard → Netherlands/Switzerland
 3. **YouTube geo-bypass** — `youtube-router` (ipset/iptables) → `gluetun-exit` → ProtonVPN WireGuard → Albania
 
-## Stacks
+## Security Model
 
-| Stack | Services | Network | Purpose |
-|-------|----------|---------|---------|
-| `infra/` | Traefik v2.10 | `traefik_proxy` | Reverse proxy, ACME certs via Cloudflare DNS challenge |
-| `arr/` | Gluetun, qBittorrent, Jellyfin, Sonarr, Radarr, Prowlarr, Overseerr, Bazarr, Autoheal | `traefik_proxy` `arr_internal` `vpn_network` | Media acquisition and streaming |
-| `dns/` | AdGuard Home | `traefik_proxy` | DNS/DoT/DoQ with ad-blocking on LAN + Tailscale |
-| `yt-exit/` | Gluetun-exit, youtube-router | bridge | YouTube traffic through Albania exit node |
-| `books/` | Kavita | `traefik_proxy` | Books, comics, manga server |
-| `essential/` | Dashy | `traefik_proxy` | Service dashboard |
-| `productivity/` | Open-WebUI | `traefik_proxy` | AI chat interface |
-| `pt/` | Transmission | `traefik_proxy` | Direct BitTorrent client (no VPN) |
+No ports are open to the public internet. The entire setup is zero-trust:
 
-## Design Decisions
-
-- **VPN namespace isolation** — qBittorrent runs inside gluetun's network namespace (`network_mode: service:gluetun`). An init script (`arr/qbittorrent-init/10-config.sh`) additionally forces the interface to `tun0`. Even if the tunnel drops, traffic cannot leak to the host. Defense in depth.
-
-- **Dual VPN with purpose-specific exits** — Media stack exits through NL/CH (P2P-optimized ProtonVPN servers). YouTube tunnel exits through Albania for geo-bypass. Separate gluetun instances, separate WireGuard keys. No single-tunnel bottleneck.
-
-- **Self-healing layering** — Three independent mechanisms: endpoint-specific health checks on every container, dependency ordering via `condition: service_healthy`, and an autoheal container that monitors and restarts unhealthy services. See [Self-Healing](#self-healing).
-
-- **Zero-trust ingress** — Traefik binds to Tailscale IP only. No ports open to the public internet. All inbound traffic traverses Cloudflare DNS then Tailscale mesh.
-
-- **YouTube routing via dynamic IP sets** — `youtube-router` downloads YouTube IP ranges, creates ipset/iptables rules inside the gluetun-exit network namespace, refreshes daily. Selective geo-bypass without full-tunnel VPN for all traffic.
-
-- **DRY compose config** — YAML extension fields (`x-arr-env`, `x-arr-healthcheck`, `x-restart-policy`) eliminate duplication across 9 services in the arr stack.
+- **Ingress** — Traefik binds exclusively to the Tailscale IP, not `0.0.0.0`. You must be on the Tailscale mesh to reach any service. HTTPS with auto-renewed Let's Encrypt certs via Cloudflare DNS challenge.
+- **VPN leak prevention** — qBittorrent runs inside gluetun's network namespace (`network_mode: service:gluetun`), meaning it literally shares gluetun's network stack. An init script additionally forces `BIND_TO_INTERFACE: tun0`. If the VPN drops, there is no network path for traffic to take — it's not a firewall rule that could be misconfigured, it's a namespace boundary.
+- **Network segmentation** — Three Docker networks isolate traffic: `traefik_proxy` for HTTPS, `arr_internal` for service-to-service (marked `internal: true`, no external access), `vpn_network` for tunnel traffic.
+- **DNS** — AdGuard Home serves DNS for LAN and Tailscale with ad/tracker blocking. Supports DoT and DoQ.
 
 ## Self-Healing
+
+Every container has an endpoint-specific health check — not just "is the process alive" but "is the service actually responding correctly":
 
 ```
 health check (curl /health, 30-60s intervals)
@@ -97,11 +110,48 @@ health check (curl /health, 30-60s intervals)
         → depends_on: service_healthy blocks dependents until recovered
 ```
 
-Every container has an endpoint-specific health check. Gluetun checks `:9999/health`, qBittorrent verifies its API response and pings `1.1.1.1`, Jellyfin checks `/health`, each *arr service checks its own `/health` endpoint. No service relies on Docker's default PID-based liveness.
+Gluetun checks its own `:9999/health` endpoint. qBittorrent verifies both its API response *and* pings `1.1.1.1` through the tunnel. Jellyfin checks `/health`. Each *arr service hits its own health endpoint. If gluetun goes down, all dependent services wait for it to recover before starting — no partial-stack states.
 
-## Why Not Netflix?
+Three independent layers: health checks catch failures, autoheal restarts them, dependency ordering prevents cascading issues.
 
-Jellyfin serves lossless Blu-ray remuxes with hardware transcoding (Intel Quick Sync via `/dev/dri`). Streaming services compress 4K to 15-25 Mbps — a remux is 60-80 Mbps. Bazarr automates subtitle acquisition across languages. No algorithmic content curation. No content disappearing when licensing deals expire. Overseerr gives family members a request interface that matches commercial streaming UX. The entire pipeline is self-healing and zero-maintenance for end users.
+## Stacks
+
+| Stack | Containers | Purpose |
+|-------|-----------|---------|
+| [`arr/`](arr/) | Gluetun, qBittorrent, Jellyfin, Sonarr, Radarr, Prowlarr, Overseerr, Bazarr, Autoheal | Media acquisition, streaming, self-healing |
+| [`infra/`](infra/) | Traefik v2.10 | Reverse proxy, ACME certs (Cloudflare DNS challenge) |
+| [`dns/`](dns/) | AdGuard Home | DNS/DoT/DoQ with ad-blocking |
+| [`yt-exit/`](yt-exit/) | Gluetun-exit, youtube-router | YouTube geo-bypass via Albania |
+| [`books/`](books/) | Kavita | Books, comics, manga server |
+| [`essential/`](essential/) | Dashy | Service dashboard |
+| [`productivity/`](productivity/) | Open-WebUI | Self-hosted AI chat |
+| [`pt/`](pt/) | Transmission | Direct torrent client (no VPN) |
+
+## Technical Details
+
+**VPN namespace isolation** — qBittorrent shares gluetun's network namespace, not just its network. The container has no network interface of its own. An init script (`arr/qbittorrent-init/10-config.sh`) sets `tun0` binding as defense in depth. Port forwarding is automatic — gluetun gets a forwarded port from ProtonVPN and pushes it to qBittorrent's API.
+
+**Dual VPN tunnels** — Two independent gluetun instances with separate WireGuard keys. The P2P tunnel exits through NL/CH (optimized for torrents). The YouTube tunnel exits through Albania (geo-bypass). Neither affects the other.
+
+**YouTube selective routing** — `youtube-router` downloads YouTube/Google IP ranges, builds ipset rules, and applies iptables routing inside gluetun-exit's network namespace. Only YouTube traffic goes through the tunnel — everything else routes normally. IP ranges refresh every 24 hours.
+
+**DRY compose config** — YAML extension fields (`x-arr-env`, `x-arr-healthcheck`, `x-restart-policy`) eliminate duplication across 9 services. One change propagates everywhere.
+
+**Hardware transcoding** — Jellyfin uses Intel Quick Sync (`/dev/dri`) for real-time transcoding when clients can't direct-play. Serves full Blu-ray remuxes to capable devices, transcodes on-the-fly for phones/tablets.
+
+## Quick Start
+
+```bash
+cp .env.example .env              # configure credentials and domain
+docker network create traefik_proxy
+
+cd infra && docker compose up -d  # Traefik (reverse proxy) — start first
+cd ../arr && docker compose up -d # media pipeline (9 containers)
+cd ../dns && docker compose up -d # AdGuard Home DNS
+# remaining stacks as needed
+```
+
+You need: Docker + Compose, a Tailscale account, a ProtonVPN account with WireGuard keys, and a domain with Cloudflare DNS. See [`.env.example`](.env.example) for all configuration options.
 
 ## Repository Structure
 
@@ -109,6 +159,7 @@ Jellyfin serves lossless Blu-ray remuxes with hardware transcoding (Intel Quick 
 .
 ├── infra/           # Traefik reverse proxy
 ├── arr/             # Media pipeline (9 containers)
+│   └── qbittorrent-init/  # VPN interface binding script
 ├── dns/             # AdGuard Home DNS
 ├── yt-exit/         # YouTube geo-bypass tunnel
 ├── books/           # Kavita reading server
@@ -117,26 +168,7 @@ Jellyfin serves lossless Blu-ray remuxes with hardware transcoding (Intel Quick 
 └── pt/              # Transmission (no VPN)
 ```
 
-Each stack is independently deployable with `docker compose up -d`.
-
-## Tech Stack
-
-**Networking** — Traefik v2.10, Tailscale, Cloudflare DNS, Gluetun (WireGuard / ProtonVPN), AdGuard Home (DNS/DoT/DoQ)
-**Media** — Jellyfin (hw transcoding), Sonarr, Radarr, Prowlarr, Bazarr, Overseerr, qBittorrent
-**Operations** — Autoheal, endpoint health checks on all 17 containers, Docker Compose dependency ordering
-**Other** — Kavita, Dashy, Open-WebUI, Transmission
-
-## Quick Start
-
-```bash
-cp .env.example .env              # configure credentials and domain
-docker network create traefik_proxy
-
-cd infra && docker compose up -d  # Traefik first
-cd ../arr && docker compose up -d # media pipeline
-cd ../dns && docker compose up -d # DNS
-# remaining stacks as needed
-```
+Each stack is independently deployable. The only shared dependency is the `traefik_proxy` Docker network.
 
 ## License
 
