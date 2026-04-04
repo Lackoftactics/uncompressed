@@ -1,10 +1,24 @@
 # uncompressed
 
-Self-healing, high-quality media pipeline.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](arr/docker-compose.yml)
+[![Website](https://img.shields.io/badge/uncompressed.media-000?logo=googlechrome&logoColor=white)](https://uncompressed.media)
+
+**Self-healing, high-quality media pipeline.**
 
 Streaming services compress 4K to 15-25 Mbps. A Blu-ray remux is 60-80 Mbps. I built a self-healing media pipeline that serves full-quality remuxes to my family with a Netflix-like request interface — and they have no idea it's not a commercial service.
 
 10 containers across 2 Docker Compose stacks, running on Unraid. Zero-trust networking via Tailscale, VPN-isolated torrenting with leak-proof namespace isolation.
+
+<!-- If you have screenshots, uncomment and add them here:
+<p align="center">
+  <img src="docs/screenshots/overseerr.png" width="45%" alt="Overseerr request UI" />
+  &nbsp;&nbsp;
+  <img src="docs/screenshots/jellyfin.png" width="45%" alt="Jellyfin playback" />
+</p>
+-->
+
+---
 
 ## The Problem
 
@@ -160,6 +174,10 @@ You need: Docker + Compose, a Tailscale account, a ProtonVPN account with WireGu
 
 The only shared dependency between stacks is the `traefik_proxy` Docker network. Other services (DNS, YouTube geo-bypass, books, dashboard) live in the [homelab](https://github.com/Lackoftactics/homelab) repo.
 
+## Contributing
+
+Issues, ideas, and PRs are welcome. If you adapt this for a different VPN provider or NAS platform, I'd love to hear about it.
+
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE) — [Fogbreak Labs](https://fogbreaklabs.com)
