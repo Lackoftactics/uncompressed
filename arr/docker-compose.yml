@@ -10,13 +10,6 @@ x-arr-env: &arr-env
 x-restart-policy: &restart-policy
   restart: unless-stopped
 
-# Common healthcheck for arr services
-x-arr-healthcheck: &arr-healthcheck
-  healthcheck:
-    interval: 30s
-    timeout: 5s
-    retries: 3
-    start_period: 30s
 
 ###############################################################################
 # Network

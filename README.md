@@ -133,7 +133,7 @@ Other supporting services (DNS, YouTube geo-bypass, books, dashboard, etc.) live
 
 **VPN namespace isolation** — qBittorrent shares gluetun's network namespace, not just its network. The container has no network interface of its own. An init script (`arr/qbittorrent-init/10-config.sh`) sets `tun0` binding as defense in depth. Port forwarding is automatic — gluetun gets a forwarded port from ProtonVPN and pushes it to qBittorrent's API.
 
-**DRY compose config** — YAML extension fields (`x-arr-env`, `x-arr-healthcheck`, `x-restart-policy`) eliminate duplication across 9 services. One change propagates everywhere.
+**DRY compose config** — YAML extension fields (`x-arr-env`, `x-restart-policy`) eliminate duplication across services. One change propagates everywhere.
 
 **Hardware transcoding** — Jellyfin uses Intel Quick Sync (`/dev/dri`) for real-time transcoding when clients can't direct-play. Serves full Blu-ray remuxes to capable devices, transcodes on-the-fly for phones/tablets.
 
@@ -156,7 +156,7 @@ cp .env.example .env              # configure credentials and domain
 docker network create traefik_proxy
 
 cd infra && docker compose up -d  # Traefik (reverse proxy) — start first
-cd ../arr && docker compose up -d # media pipeline (9 containers)
+cd ../arr && docker compose up -d # media pipeline (9 services)
 ```
 
 You need: Docker + Compose, a Tailscale account, a ProtonVPN account with WireGuard keys, and a domain with Cloudflare DNS. See [`.env.example`](.env.example) for all configuration options.
@@ -166,7 +166,7 @@ You need: Docker + Compose, a Tailscale account, a ProtonVPN account with WireGu
 ```
 .
 ├── infra/           # Traefik reverse proxy
-└── arr/             # Media pipeline (9 containers)
+└── arr/             # Media pipeline (9 services)
     └── qbittorrent-init/  # VPN interface binding script
 ```
 
