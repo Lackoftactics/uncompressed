@@ -108,7 +108,7 @@ services:
       TZ:               ${TZ:-Europe/Warsaw}
       WEBUI_PORT:       8080
       WEBUI_USERNAME:   ${QB_USERNAME:-admin}
-      WEBUI_PASSWORD:   ${QB_PASSWORD:-adminadmin}
+      WEBUI_PASSWORD:   ${QB_PASSWORD:?Set QB_PASSWORD in .env}
       TORRENTING_PORT:  51413
       BIND_TO_INTERFACE: tun0  # Bind qBittorrent to the VPN interface
     volumes:
@@ -312,27 +312,6 @@ services:
       traefik.http.routers.bazarr-secure.service:                    bazarr-svc
       traefik.http.services.bazarr-svc.loadbalancer.server.port:     "6767"
 
-  # jellyfin-auto-collections:
-  #   image: ghcr.io/ghomashudson/jellyfin-auto-collections:latest
-  #   container_name: jellyfin-auto-collections
-  #   network_mode: "service:gluetun"
-  #   depends_on:
-  #     gluetun:
-  #       condition: service_healthy  # Wait for gluetun to be healthy
-  #     jellyfin:
-  #       condition: service_healthy  # Wait for jellyfin to be healthy
-  #   environment:
-  #     <<: *arr-env
-  #     CRONTAB: 0 0 * * *
-  #     TZ: America/New_York
-  #     JELLYFIN_SERVER_URL: ${JELLYFIN_SERVER_URL}
-  #     JELLYFIN_API_KEY: ${JELLYFIN_API_KEY}
-  #     JELLYFIN_USER_ID: ${JELLYFIN_USER_ID}
-  #   volumes:
-  #     - /mnt/user/appdata/jellyfin-auto-collections/config:/app/config
-  # Removed redundant network-health container as its functionality
-  # is now covered by the more comprehensive vpn-monitor container
-
   # Auto-healing container for the entire stack
   auto-heal:
     image: willfarrell/autoheal:1.2.0
@@ -350,21 +329,3 @@ services:
       - traefik_proxy
       - vpn_network
 
-  # VPN connection monitor and auto-healer - DISABLED
-  # vpn-monitor:
-  #   build: ./vpn-monitor
-  #   container_name: vpn-monitor
-  #   <<: *restart-policy
-  #   depends_on:
-  #     gluetun:
-  #       condition: service_healthy
-  #     qbittorrent:
-  #       condition: service_started
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #     - /mnt/user/appdata/vpn-monitor:/var/log
-  #   networks:
-  #     - vpn_network
-  #     - arr_internal
-  #   # Add privileged mode to ensure Docker socket access works properly
-  #   privileged: true

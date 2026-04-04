@@ -125,6 +125,18 @@ Other supporting services (DNS, YouTube geo-bypass, books, dashboard, etc.) live
 
 **Hardware transcoding** — Jellyfin uses Intel Quick Sync (`/dev/dri`) for real-time transcoding when clients can't direct-play. Serves full Blu-ray remuxes to capable devices, transcodes on-the-fly for phones/tablets.
 
+## Hardware Requirements
+
+| | Minimum | Recommended |
+|---|---------|-------------|
+| **CPU** | x86_64 quad-core | Intel with Quick Sync (7th gen+) |
+| **RAM** | 8 GB | 16 GB |
+| **Storage** | SSD (configs) + HDD (media) | NVMe (configs) + large HDD array |
+| **GPU** | Not required | Intel iGPU for hardware transcoding |
+| **Network** | 1 Gbps LAN | 1 Gbps+ LAN, stable WAN for VPN |
+
+Not compatible with Raspberry Pi or ARM devices. Runs well on Unraid, Proxmox, or any Linux box with Docker.
+
 ## Quick Start
 
 ```bash
