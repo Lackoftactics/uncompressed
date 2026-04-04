@@ -4,7 +4,7 @@ Self-healing, high-quality media pipeline.
 
 Streaming services compress 4K to 15-25 Mbps. A Blu-ray remux is 60-80 Mbps. I built a self-healing media pipeline that serves full-quality remuxes to my family with a Netflix-like request interface — and they have no idea it's not a commercial service.
 
-17 containers across 8 Docker Compose stacks, running on Unraid. Zero-trust networking via Tailscale, VPN-isolated torrenting with leak-proof namespace isolation, and a YouTube geo-bypass tunnel that selectively routes only Google's IP ranges through Albania.
+12 containers across 3 Docker Compose stacks, running on Unraid. Zero-trust networking via Tailscale, VPN-isolated torrenting with leak-proof namespace isolation, and a YouTube geo-bypass tunnel that selectively routes only Google's IP ranges through Albania.
 
 ## The Problem
 
@@ -54,11 +54,11 @@ The whole pipeline is self-healing. If any container goes down, it gets restarte
                    │     │     │      │
        ┌───────────┘     │     │      └───────────┐
        ▼                 ▼     ▼                  ▼
-  ┌─────────┐    ┌─────────────────┐       ┌──────────┐
-  │Jellyfin │    │   *arr suite    │       │ AdGuard  │
-  │ Kavita  │    │ Sonarr  Radarr  │       │  Home    │
-  │ Dashy   │    │Prowlarr Bazarr  │       │DNS/DoT/Q │
-  │Open-WebUI│   │   Overseerr     │       └──────────┘
+  ┌─────────┐    ┌─────────────────┐
+  │Jellyfin │    │   *arr suite    │
+  │         │    │ Sonarr  Radarr  │
+  │         │    │Prowlarr Bazarr  │
+  │         │    │   Overseerr     │
   └─────────┘    └────────┬────────┘
                           │
                  ┌────────┴────────┐
@@ -96,8 +96,6 @@ No ports are open to the public internet. The entire setup is zero-trust:
 - **Ingress** — Traefik binds exclusively to the Tailscale IP, not `0.0.0.0`. You must be on the Tailscale mesh to reach any service. HTTPS with auto-renewed Let's Encrypt certs via Cloudflare DNS challenge.
 - **VPN leak prevention** — qBittorrent runs inside gluetun's network namespace (`network_mode: service:gluetun`), meaning it literally shares gluetun's network stack. An init script additionally forces `BIND_TO_INTERFACE: tun0`. If the VPN drops, there is no network path for traffic to take — it's not a firewall rule that could be misconfigured, it's a namespace boundary.
 - **Network segmentation** — Three Docker networks isolate traffic: `traefik_proxy` for HTTPS, `arr_internal` for service-to-service (marked `internal: true`, no external access), `vpn_network` for tunnel traffic.
-- **DNS** — AdGuard Home serves DNS for LAN and Tailscale with ad/tracker blocking. Supports DoT and DoQ.
-
 ## Self-Healing
 
 Every container has an endpoint-specific health check — not just "is the process alive" but "is the service actually responding correctly":
@@ -120,12 +118,9 @@ Three independent layers: health checks catch failures, autoheal restarts them, 
 |-------|-----------|---------|
 | [`arr/`](arr/) | Gluetun, qBittorrent, Jellyfin, Sonarr, Radarr, Prowlarr, Overseerr, Bazarr, Autoheal | Media acquisition, streaming, self-healing |
 | [`infra/`](infra/) | Traefik v2.10 | Reverse proxy, ACME certs (Cloudflare DNS challenge) |
-| [`dns/`](dns/) | AdGuard Home | DNS/DoT/DoQ with ad-blocking |
 | [`yt-exit/`](yt-exit/) | Gluetun-exit, youtube-router | YouTube geo-bypass via Albania |
-| [`books/`](books/) | Kavita | Books, comics, manga server |
-| [`essential/`](essential/) | Dashy | Service dashboard |
-| [`productivity/`](productivity/) | Open-WebUI | Self-hosted AI chat |
-| [`pt/`](pt/) | Transmission | Direct torrent client (no VPN) |
+
+Other supporting services (DNS, books, dashboard, etc.) live in a separate [homelab](https://github.com/Lackoftactics/homelab) repo.
 
 ## Technical Details
 
@@ -147,8 +142,7 @@ docker network create traefik_proxy
 
 cd infra && docker compose up -d  # Traefik (reverse proxy) — start first
 cd ../arr && docker compose up -d # media pipeline (9 containers)
-cd ../dns && docker compose up -d # AdGuard Home DNS
-# remaining stacks as needed
+cd ../yt-exit && docker compose up -d # YouTube geo-bypass (optional)
 ```
 
 You need: Docker + Compose, a Tailscale account, a ProtonVPN account with WireGuard keys, and a domain with Cloudflare DNS. See [`.env.example`](.env.example) for all configuration options.
@@ -160,15 +154,10 @@ You need: Docker + Compose, a Tailscale account, a ProtonVPN account with WireGu
 ├── infra/           # Traefik reverse proxy
 ├── arr/             # Media pipeline (9 containers)
 │   └── qbittorrent-init/  # VPN interface binding script
-├── dns/             # AdGuard Home DNS
-├── yt-exit/         # YouTube geo-bypass tunnel
-├── books/           # Kavita reading server
-├── essential/       # Dashy dashboard
-├── productivity/    # Open-WebUI
-└── pt/              # Transmission (no VPN)
+└── yt-exit/         # YouTube geo-bypass tunnel
 ```
 
-Each stack is independently deployable. The only shared dependency is the `traefik_proxy` Docker network.
+Each stack is independently deployable. The only shared dependency is the `traefik_proxy` Docker network. Supporting services (DNS, books, dashboard) live in the [homelab](https://github.com/Lackoftactics/homelab) repo.
 
 ## License
 
