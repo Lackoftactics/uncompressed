@@ -11,9 +11,9 @@ Streaming services compress 4K to 15-25 Mbps. A Blu-ray remux is 60-80 Mbps. I b
 10 containers across 2 Docker Compose stacks, running on Unraid. Zero-trust networking via Tailscale, VPN-isolated torrenting with leak-proof namespace isolation.
 
 <p align="center">
-  <img src="docs/screen-jellyfin.png" width="32%" alt="Jellyfin media library" />
-  <img src="docs/screen-real-radarr.png" width="32%" alt="Radarr movie management" />
-  <img src="docs/screen-sonarr.png" width="32%" alt="Sonarr TV show management" />
+  <img src="docs/screenshots/screen-jellyfin.png" width="32%" alt="Jellyfin media library" />
+  <img src="docs/screenshots/screen-real-radarr.png" width="32%" alt="Radarr movie management" />
+  <img src="docs/screenshots/screen-sonarr.png" width="32%" alt="Sonarr TV show management" />
 </p>
 
 ---
