@@ -16,8 +16,8 @@ services:
     networks:
       - traefik_proxy
     ports:
-      - "100.92.119.54:80:80"
-      - "100.92.119.54:443:443"
+      - "${TAILSCALE_IP}:80:80"
+      - "${TAILSCALE_IP}:443:443"
     environment:
       - CF_API_EMAIL=${CF_API_EMAIL}
       - CF_DNS_API_TOKEN=${CF_DNS_API_TOKEN}

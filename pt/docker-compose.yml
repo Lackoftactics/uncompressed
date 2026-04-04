@@ -1,0 +1,74 @@
+###############################################################################
+# Transmission BitTorrent Client Stack
+###############################################################################
+
+# Common environment variables for consistent user/group/timezone settings
+x-transmission-env: &transmission-env
+  PUID: ${PUID:-99}
+  PGID: ${PGID:-100}
+  TZ: ${TZ:-Europe/Warsaw}
+
+# Common restart policy
+x-restart-policy: &restart-policy
+  restart: unless-stopped
+
+###############################################################################
+# Networks
+###############################################################################
+networks:
+  # External network for Traefik integration
+  traefik_proxy:
+    external: true
+
+services:
+  transmission:
+    image: lscr.io/linuxserver/transmission:latest
+    container_name: transmission
+    <<: *restart-policy
+    env_file:
+      - ./.env
+    environment:
+      <<: *transmission-env
+      # LinuxServer Transmission specific settings
+      USER: ${TRANSMISSION_USERNAME:-admin}
+      PASS: ${TRANSMISSION_PASSWORD:-adminadmin}
+      PEERPORT: ${TRANSMISSION_PEER_PORT:-51414}
+      # Set web UI to serve at root path for easier Traefik routing
+      # Whitelist settings (optional)
+      # WHITELIST: 192.168.1.0/24
+      # HOST_WHITELIST: transmission.local
+    ports:
+      - "9091:9091"  # Web UI
+      - "51414:51414"  # Peer communication
+      - "51414:51414/udp"  # Peer communication UDP
+    networks:
+      - traefik_proxy
+    volumes:
+      - /mnt/user/appdata/transmission:/config
+      - /mnt/user/media/downloads/transmission:/downloads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9091/transmission/web/"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.transmission-secure.entrypoints: websecure
+      traefik.http.routers.transmission-secure.rule: Host(`pt.${DOMAIN_NAME}`)
+      traefik.http.routers.transmission-secure.tls: "true"
+      traefik.http.routers.transmission-secure.tls.certresolver: letsencrypt
+      traefik.http.routers.transmission-secure.service: transmission-svc
+      traefik.http.services.transmission-svc.loadbalancer.server.port: "9091"
+      # New: Add WebSocket middleware
+      traefik.http.routers.transmission-secure.middlewares: transmission-ws
+      traefik.http.middlewares.transmission-ws.headers.stsSeconds: 31536000  # Security headers
+      traefik.http.middlewares.transmission-ws.headers.forceSTSHeader: true
+      traefik.http.middlewares.transmission-ws.headers.stsPreload: true
+      traefik.http.middlewares.transmission-ws.headers.stsIncludeSubDomains: true
+      traefik.http.middlewares.transmission-ws.headers.browserXssFilter: true
+      traefik.http.middlewares.transmission-ws.headers.contentTypeNosniff: true
+      # Optional: Increase timeouts if needed
+      traefik.http.middlewares.transmission-ws.chain.middlewares: timeout-mw
+      traefik.http.middlewares.timeout-mw.timeout.timeout: 30s
+
