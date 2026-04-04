@@ -96,7 +96,7 @@ services:
       traefik.http.routers.qbittorrent-secure.service:               qbittorrent-svc
       traefik.http.services.qbittorrent-svc.loadbalancer.server.port: "8080"
   qbittorrent:
-    image: linuxserver/qbittorrent:latest
+    image: linuxserver/qbittorrent:5.1.4
     container_name: qbittorrent
     network_mode: "service:gluetun"
     depends_on:
@@ -123,7 +123,7 @@ services:
       retries: 3
       start_period: 30s
   jellyfin:
-    image: lscr.io/linuxserver/jellyfin:latest
+    image: lscr.io/linuxserver/jellyfin:10.11.7
     container_name: jellyfin
     devices:
       - /dev/dri:/dev/dri
@@ -158,7 +158,7 @@ services:
       traefik.http.middlewares.jellyfin-headers.headers.customResponseHeaders.X-Frame-Options: "SAMEORIGIN"
       traefik.http.routers.jellyfin-secure.middlewares: jellyfin-headers
   sonarr:
-    image: linuxserver/sonarr:latest
+    image: linuxserver/sonarr:4.0.17
     container_name: sonarr
     depends_on:
       gluetun:
@@ -189,7 +189,7 @@ services:
       traefik.http.routers.sonarr-secure.service: sonarr-svc
       traefik.http.services.sonarr-svc.loadbalancer.server.port: "8989"
   radarr:
-    image: linuxserver/radarr:latest
+    image: linuxserver/radarr:6.1.1
     container_name: radarr
     depends_on:
       gluetun:
@@ -220,7 +220,7 @@ services:
       traefik.http.routers.radarr-secure.service:                    radarr-svc
       traefik.http.services.radarr-svc.loadbalancer.server.port:     "7878"
   prowlarr:
-    image: linuxserver/prowlarr:latest
+    image: linuxserver/prowlarr:2.3.5
     container_name: prowlarr
     depends_on:
       gluetun:
@@ -249,7 +249,7 @@ services:
       traefik.http.routers.prowlarr-secure.service:                  prowlarr-svc
       traefik.http.services.prowlarr-svc.loadbalancer.server.port:   "9696"
   overseerr:
-    image: lscr.io/linuxserver/overseerr:latest
+    image: lscr.io/linuxserver/overseerr:1.35.0
     container_name: overseerr
     depends_on:
       gluetun:
@@ -281,7 +281,7 @@ services:
       traefik.http.routers.overseerr-secure.service:                 overseerr-svc
       traefik.http.services.overseerr-svc.loadbalancer.server.port:  "5055"
   bazarr:
-    image: lscr.io/linuxserver/bazarr:latest
+    image: lscr.io/linuxserver/bazarr:1.5.6
     container_name: bazarr
     depends_on:
       gluetun:
@@ -335,7 +335,7 @@ services:
 
   # Auto-healing container for the entire stack
   auto-heal:
-    image: willfarrell/autoheal:latest
+    image: willfarrell/autoheal:1.2.0
     container_name: auto-heal
     <<: *restart-policy
     environment:
