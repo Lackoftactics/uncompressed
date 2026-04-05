@@ -39,9 +39,9 @@ services:
       - /dev/net/tun
     env_file:
       - ./.env
-    ports:
-      - "8080:8080" # qbittorrent
-      - "9999:9999/tcp"  # Health check server
+    # No ports published to host — Traefik routes via Docker network.
+    # qBittorrent WebUI and health server are only reachable through Traefik
+    # or from other containers on the same network.
     environment:
       TZ:                         ${TZ}
       # --- ProtonVPN / WireGuard ---
@@ -138,8 +138,6 @@ services:
     networks:
       - traefik_proxy
       - arr_internal
-    ports:
-      - "8096:8096"
     labels:
       traefik.enable: "true"
       traefik.http.routers.jellyfin-secure.entrypoints: websecure
@@ -157,8 +155,6 @@ services:
       gluetun:
         condition: service_healthy
     environment: *arr-env
-    ports:
-      - "8989:8989"
     networks:
       - traefik_proxy
       - arr_internal
@@ -191,8 +187,6 @@ services:
     networks:
       - traefik_proxy
       - arr_internal
-    ports:
-      - "7878:7878"
     volumes:
       - /mnt/user/appdata/radarr:/config
       - /mnt/user/media/movies:/movies
@@ -222,8 +216,6 @@ services:
     networks:
       - traefik_proxy
       - arr_internal
-    ports:
-      - "9696:9696"
     volumes:
       - /mnt/user/appdata/prowlarr:/config
     restart: unless-stopped
@@ -250,8 +242,6 @@ services:
     networks:
       - traefik_proxy
       - arr_internal
-    ports:
-      - "5055:5055"
     environment:
       PUID: ${PUID:-1000}
       PGID: ${PGID:-1000}
@@ -283,8 +273,6 @@ services:
     networks:
       - traefik_proxy
       - arr_internal
-    ports:
-      - "6767:6767"
     volumes:
       - /mnt/user/appdata/bazarr:/config
       - /mnt/user/media/movies:/movies

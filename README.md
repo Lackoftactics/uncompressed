@@ -102,7 +102,7 @@ No ports are open to the public internet. The entire setup is zero-trust:
 
 - **Ingress** — Traefik binds exclusively to the Tailscale IP, not `0.0.0.0`. You must be on the Tailscale mesh to reach any service. HTTPS with auto-renewed Let's Encrypt certs via Cloudflare DNS challenge.
 - **VPN leak prevention** — qBittorrent runs inside gluetun's network namespace (`network_mode: service:gluetun`), meaning it literally shares gluetun's network stack. An init script additionally forces `BIND_TO_INTERFACE: tun0`. If the VPN drops, there is no network path for traffic to take — it's not a firewall rule that could be misconfigured, it's a namespace boundary.
-- **Network segmentation** — Three Docker networks isolate traffic: `traefik_proxy` for HTTPS, `arr_internal` for service-to-service (marked `internal: true`, no external access), `vpn_network` for tunnel traffic.
+- **Network segmentation** — Three Docker networks isolate traffic: `traefik_proxy` for HTTPS, `arr_internal` for service-to-service (marked `internal: true`, no external access), `vpn_network` for tunnel traffic. No service publishes ports to the host — all ingress flows through Traefik, eliminating any way to bypass TLS or security headers.
 
 ## Self-Healing
 
