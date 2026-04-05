@@ -53,16 +53,16 @@ This is the part that's actually interesting. The services themselves are standa
                 │      Traefik v2.10      │
                 │   Let's Encrypt (ACME)  │
                 │  bound to Tailscale IP  │
-                └──┬─────┬─────┬──────┬───┘
-                   │     │     │      │
-       ┌───────────┘     │     │      └───────────┐
-       ▼                 ▼     ▼                  ▼
-  ┌─────────┐    ┌─────────────────┐
-  │Jellyfin │    │   *arr suite    │
-  │         │    │ Sonarr  Radarr  │
-  │         │    │Prowlarr Bazarr  │
-  │         │    │     Seerr       │
-  └─────────┘    └────────┬────────┘
+                └────────┬────────┬───┘
+                         │        │
+                ┌────────┘        └────────┐
+                ▼                          ▼
+  ┌─────────────────┐    ┌─────────────────┐
+  │    Jellyfin     │    │   *arr suite    │
+  │                 │    │ Sonarr  Radarr  │
+  │                 │    │Prowlarr Bazarr  │
+  │                 │    │     Seerr       │
+  └─────────────────┘    └────────┬────────┘
                           │
                  ┌────────┴────────┐
                  │   qBittorrent   │  network_mode: service:gluetun
