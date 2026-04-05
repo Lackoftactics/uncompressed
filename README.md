@@ -4,7 +4,7 @@ My arr stack. Hardened Docker Compose config for Jellyfin + Sonarr/Radarr + qBit
 
 I run this on Unraid. It took a few months to get the networking right — most guides just slap a firewall rule on the VPN and call it a day. I wanted actual isolation, not "it probably works." Here's what I landed on.
 
-My family uses [Seerr](https://github.com/fallenbagel/jellyseerr) to request movies/shows and [Infuse](https://firecore.com/infuse) on Apple TV to watch them. They don't know or care what's behind it.
+My family uses [Seerr](https://github.com/fallenbagel/jellyseerr) to request movies/shows and [Infuse](https://firecore.com/infuse) on Apple TV to watch them. 
 
 <p align="center">
   <img src="docs/screenshots/screen-jellyfin.png" width="32%" alt="Jellyfin media library" />
