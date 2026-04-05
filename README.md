@@ -28,14 +28,14 @@ I kept running into the same frustrations with streaming:
 
 I wanted something where my family could open an app, search for a movie, hit "request", and have it appear in their library — with Blu-ray quality, automated subtitles in multiple languages, and zero maintenance on their end.
 
-On the client side, my family uses **[Overseerr](https://overseerr.dev)** to request content and **[Infuse](https://firecore.com/infuse)** on Apple TV to watch it. They see a polished, Netflix-like interface — browse, search, request, play. They have no idea what's behind it.
+On the client side, my family uses **[Seerr](https://github.com/fallenbagel/jellyseerr)** to request content and **[Infuse](https://firecore.com/infuse)** on Apple TV to watch it. They see a polished, Netflix-like interface — browse, search, request, play. They have no idea what's behind it.
 
 ## How It Works
 
 The core is a **9-container arr stack** that automates the entire pipeline:
 
 ```
-Family member opens Overseerr → requests a movie
+Family member opens Seerr → requests a movie
   → Radarr picks it up, searches Prowlarr for indexers
     → qBittorrent downloads through VPN tunnel (gluetun namespace)
       → Radarr imports, renames, organizes
@@ -72,7 +72,7 @@ The whole pipeline is self-healing. If any container goes down, it gets restarte
   │Jellyfin │    │   *arr suite    │
   │         │    │ Sonarr  Radarr  │
   │         │    │Prowlarr Bazarr  │
-  │         │    │   Overseerr     │
+  │         │    │   Seerr     │
   └─────────┘    └────────┬────────┘
                           │
                  ┌────────┴────────┐
@@ -124,7 +124,7 @@ Three independent layers: health checks catch failures, autoheal restarts them, 
 
 | Stack | Containers | Purpose |
 |-------|-----------|---------|
-| [`arr/`](arr/) | Gluetun, qBittorrent, Jellyfin, Sonarr, Radarr, Prowlarr, Overseerr, Bazarr, Autoheal | Media acquisition, streaming, self-healing |
+| [`arr/`](arr/) | Gluetun, qBittorrent, Jellyfin, Sonarr, Radarr, Prowlarr, Seerr, Bazarr, Autoheal | Media acquisition, streaming, self-healing |
 | [`infra/`](infra/) | Traefik v2.10 | Reverse proxy, ACME certs (Cloudflare DNS challenge) |
 
 Other supporting services (DNS, YouTube geo-bypass, books, dashboard, etc.) live in a separate [homelab](https://github.com/Lackoftactics/homelab) repo.

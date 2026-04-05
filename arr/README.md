@@ -10,7 +10,7 @@ VPN-isolated media acquisition and streaming stack. 9 containers with self-heali
 - **sonarr** — TV show management and automation.
 - **radarr** — Movie management and automation.
 - **prowlarr** — Indexer manager for Sonarr/Radarr.
-- **overseerr** — Media request interface for end users.
+- **seerr** — Media request interface for end users.
 - **bazarr** — Automated subtitle downloads.
 - **auto-heal** — Monitors all containers, restarts any that fail health checks.
 

@@ -233,9 +233,9 @@ services:
       traefik.http.routers.prowlarr-secure.tls.certresolver:         letsencrypt
       traefik.http.routers.prowlarr-secure.service:                  prowlarr-svc
       traefik.http.services.prowlarr-svc.loadbalancer.server.port:   "9696"
-  overseerr:
-    image: lscr.io/linuxserver/overseerr:1.35.0
-    container_name: overseerr
+  seerr:
+    image: ghcr.io/seerr-team/seerr:v3.1.0
+    container_name: seerr
     depends_on:
       gluetun:
         condition: service_healthy
@@ -247,22 +247,22 @@ services:
       PGID: ${PGID:-1000}
       TZ:   ${TZ:-Europe/Warsaw}
     volumes:
-      - /mnt/user/appdata/overseerr/config:/config
+      - /mnt/user/appdata/seerr/config:/config
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5055/health"]
+      test: ["CMD", "wget", "-qO-", "http://localhost:5055/health"]
       interval: 1m
       timeout: 10s
       retries: 3
       start_period: 30s
     labels:
       traefik.enable: "true"
-      traefik.http.routers.overseerr-secure.entrypoints:             websecure
-      traefik.http.routers.overseerr-secure.rule:                    Host(`overseerr.${DOMAIN_NAME}`)
-      traefik.http.routers.overseerr-secure.tls:                     "true"
-      traefik.http.routers.overseerr-secure.tls.certresolver:        letsencrypt
-      traefik.http.routers.overseerr-secure.service:                 overseerr-svc
-      traefik.http.services.overseerr-svc.loadbalancer.server.port:  "5055"
+      traefik.http.routers.seerr-secure.entrypoints:             websecure
+      traefik.http.routers.seerr-secure.rule:                    Host(`seerr.${DOMAIN_NAME}`)
+      traefik.http.routers.seerr-secure.tls:                     "true"
+      traefik.http.routers.seerr-secure.tls.certresolver:        letsencrypt
+      traefik.http.routers.seerr-secure.service:                 seerr-svc
+      traefik.http.services.seerr-svc.loadbalancer.server.port:  "5055"
   bazarr:
     image: lscr.io/linuxserver/bazarr:1.5.6
     container_name: bazarr
