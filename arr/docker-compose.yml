@@ -138,6 +138,8 @@ services:
     networks:
       - traefik_proxy
       - arr_internal
+    ports:
+      - "8096:8096"  # Jellyfin needs direct access for LAN clients (Infuse, Apple TV)
     labels:
       traefik.enable: "true"
       traefik.http.routers.jellyfin-secure.entrypoints: websecure
