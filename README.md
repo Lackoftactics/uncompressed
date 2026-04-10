@@ -85,8 +85,6 @@ This is the part that's actually interesting. The services themselves are standa
 
 **`infra/`** — Traefik v2.10.7 reverse proxy with auto HTTPS via Cloudflare DNS challenge.
 
-Other stuff (DNS, books, dashboard) lives in a separate [homelab](https://github.com/Lackoftactics/homelab) repo.
-
 ## License
 
 [MIT](LICENSE)
