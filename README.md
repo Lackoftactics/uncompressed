@@ -43,7 +43,7 @@ This is the part that's actually interesting. The services themselves are standa
 
 **VPN namespace isolation** — qBittorrent doesn't just "use" the VPN. It runs inside gluetun's network namespace (`network_mode: service:gluetun`), meaning it shares gluetun's entire network stack. The container has no network interface of its own. An init script ([`10-config.sh`](arr/qbittorrent-init/10-config.sh)) additionally forces `BIND_TO_INTERFACE: tun0` as defense in depth. If the VPN drops, there is no path for traffic to take — it's a kernel boundary, not a firewall rule that could be misconfigured.
 
-**No published ports** — None of the services expose ports to the host. Traefik routes to containers through the Docker network directly. There's no way to hit Sonarr/Radarr/Jellyfin by going to `host:port` and bypassing TLS + security headers.
+**No published ports, with one exception** — only Jellyfin publishes `:8096` to the host so LAN clients (Infuse, Apple TV) can hit it directly. Everything else is reachable only through Traefik over the Docker network — there's no way to hit Sonarr/Radarr/Prowlarr/etc. by going to `host:port` and bypassing TLS + security headers.
 
 **Tailscale-only ingress** — Traefik binds to `${TAILSCALE_IP}:443`, not `0.0.0.0:443`. You must be on the Tailscale mesh to reach any service. No ports face the public internet. HTTPS certs are auto-renewed via Cloudflare DNS challenge.
 
@@ -71,7 +71,7 @@ flowchart LR
         end
 
         traefik --> services
-        traefik -->|qbit WebUI| qbit
+        traefik -->|qbit WebUI :8080| gluetun
     end
 
     gluetun ==>|all torrent egress| pvpn
