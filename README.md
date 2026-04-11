@@ -35,7 +35,7 @@ cd infra && docker compose up -d  # traefik first
 cd ../arr && docker compose up -d # media pipeline (9 containers)
 ```
 
-Both `arr/docker-compose.yml` and `infra/docker-compose.yml` declare `env_file: ./.env` and use `${VAR}` interpolation, both of which resolve relative to the compose file's own directory — so a single root-level `.env` is not enough on its own. The two symlinks above keep one source of truth at the repo root while making it visible to each stack.
+Each compose file declares `env_file: ./.env`, resolved relative to its own directory — so `arr/docker-compose.yml` needs `arr/.env`. Symlinking keeps one source of truth at the repo root.
 
 ## Networking & Security
 
