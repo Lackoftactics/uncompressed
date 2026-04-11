@@ -51,46 +51,33 @@ This is the part that's actually interesting. The services themselves are standa
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    user((User over Tailscale))
+    pvpn((ProtonVPN<br/>WireGuard NL/CH))
+
+    user -->|HTTPS only| traefik
+
+    subgraph host[Docker host]
+        direction TB
+        traefik[Traefik<br/>Tailscale IP only]
+        services[Jellyfin · Sonarr · Radarr<br/>Prowlarr · Bazarr · Seerr]
+
+        subgraph netns[shared network namespace]
+            direction TB
+            qbit[qBittorrent]
+            gluetun[Gluetun]
+            qbit === gluetun
+        end
+
+        traefik --> services
+        traefik -->|qbit WebUI| qbit
+    end
+
+    gluetun ==>|all torrent egress| pvpn
 ```
-                       ┌────────────┐
-                       │ Cloudflare │
-                       │    DNS     │
-                       └─────┬──────┘
-                             │
-                       ┌─────┴──────┐
-                       │ Tailscale  │
-                       │   Mesh     │
-                       └─────┬──────┘
-                             │
-                ┌────────────┴────────────┐
-                │      Traefik v2.10      │
-                │   Let's Encrypt (ACME)  │
-                │  bound to Tailscale IP  │
-                └────────┬────────┬───┘
-                         │        │
-                ┌────────┘        └────────┐
-                ▼                          ▼
-  ┌─────────────────┐    ┌─────────────────┐
-  │    Jellyfin     │    │   *arr suite    │
-  │                 │    │ Sonarr  Radarr  │
-  │                 │    │Prowlarr Bazarr  │
-  │                 │    │     Seerr       │
-  └─────────────────┘    └────────┬────────┘
-                          │
-                 ┌────────┴────────┐
-                 │   qBittorrent   │  network_mode: service:gluetun
-                 │  bound to tun0  │  (namespace isolation)
-                 └────────┬────────┘
-                          │
-  ┌───────────────────────┼───────────────────────────┐
-  │    vpn_network        │                           │
-  │              ┌────────┴────────┐                  │
-  │              │     Gluetun     │                  │
-  │              │ ProtonVPN (WG)  │                  │
-  │              │   NL/CH (P2P)   │                  │
-  │              └─────────────────┘                  │
-  └───────────────────────────────────────────────────┘
-```
+
+Cloudflare is used only as the ACME DNS-01 challenge target for cert renewal — control plane, not in the user-traffic path.
 
 ## What's in the stack
 
