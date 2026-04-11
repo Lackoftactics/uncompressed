@@ -133,7 +133,6 @@ services:
       - /mnt/user/appdata/jellyfin:/config
       - /mnt/user/media/movies:/data/movies
       - /mnt/user/media/tv:/data/tvshows
-      - /mnt/user/media/downloads/transmission:/data/downloads/transmission
     restart: unless-stopped
     networks:
       - traefik_proxy
