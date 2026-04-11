@@ -12,17 +12,30 @@ My family uses [Seerr](https://github.com/fallenbagel/jellyseerr) to request mov
   <img src="docs/screenshots/screen-sonarr.png" width="32%" alt="Sonarr TV show management" />
 </p>
 
+## Prerequisites
+
+- **Docker + Compose**
+- **[Tailscale](https://tailscale.com) account.** Open these ports in your Tailscale ACL for the host running this stack: `tcp:80`, `tcp:443` (Traefik, bound to your Tailscale IP) and `tcp:8096` (Jellyfin direct, for LAN clients like Infuse / Apple TV). Nothing else is published to the host.
+- **[ProtonVPN](https://protonvpn.com) account** with WireGuard keys (P2P-enabled servers in NL/CH).
+- **Domain on [Cloudflare DNS](https://www.cloudflare.com)** with a scoped API token (not the Global API Key). Create the token at [dash.cloudflare.com → My Profile → API Tokens](https://dash.cloudflare.com/profile/api-tokens) with these permissions on the target zone:
+  - `Zone → Zone → Read`
+  - `Zone → DNS → Edit`
+
+  This is the minimum required for the ACME DNS-01 challenge. See [`.env.example`](.env.example) for the full variable list.
+
 ## Quick Start
 
 ```bash
-cp .env.example .env              # configure credentials and domain
+cp .env.example .env              # fill in secrets, domain, Tailscale IP, WG keys, CF token
+ln -s ../.env arr/.env            # each compose stack reads its own .env
+ln -s ../.env infra/.env
 docker network create traefik_proxy
 
 cd infra && docker compose up -d  # traefik first
-cd ../arr && docker compose up -d # everything else
+cd ../arr && docker compose up -d # media pipeline (9 containers)
 ```
 
-You need Docker + Compose, a [Tailscale](https://tailscale.com) account, a [ProtonVPN](https://protonvpn.com) account with WireGuard keys, and a domain on [Cloudflare DNS](https://www.cloudflare.com). See [`.env.example`](.env.example) for all the variables.
+Both `arr/docker-compose.yml` and `infra/docker-compose.yml` declare `env_file: ./.env` and use `${VAR}` interpolation, both of which resolve relative to the compose file's own directory — so a single root-level `.env` is not enough on its own. The two symlinks above keep one source of truth at the repo root while making it visible to each stack.
 
 ## Networking & Security
 
