@@ -57,6 +57,7 @@ docker compose -f arr/docker-compose.yml up -d     # media pipeline (9 container
 
 Each compose file declares `env_file: ./.env`, resolved relative to its own directory — so `arr/docker-compose.yml` needs `arr/.env`. Symlinking keeps one source of truth at the repo root.
 
+### Configuring each services
 To configure each service, be sure to use docker internal DNS to let services reach each other on the network `arr_internal` :
 - http://prowlarr:9696
 - http://radarr:7878
@@ -66,6 +67,7 @@ To configure each service, be sure to use docker internal DNS to let services re
 - http://bazarr:6767
 - http://seerr:5055
 
+### Domains
 This is the list of subdomains for which you must create `A` records pointing to the Tailscale IP of the machine that hosts Traefik:
 - traefik
 - bazarr
@@ -77,6 +79,11 @@ This is the list of subdomains for which you must create `A` records pointing to
 - sonarr
 
 Note: create full FQDNs (e.g., traefik.example.com) in your DNS zone (alternatively, add them to your hosts file), each pointing to your host's Tailscale IP.
+
+### qBittorrent
+The web UI is at `qbit.example.com` and a temporary password for the `admin` user will be printed to the container log on startup.
+
+You must then change username/password in the web UI section of settings. If you do not change the password a new one will be generated every time the container starts.
 
 ## Networking & Security
 
