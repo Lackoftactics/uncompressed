@@ -4,7 +4,7 @@ networks:
 
 services:
   traefik:
-    image: traefik:v2.10.7
+    image: traefik:v3.6.13
     container_name: traefik
     restart: unless-stopped
     env_file:
@@ -20,9 +20,10 @@ services:
       - CF_API_EMAIL=${CF_API_EMAIL}
       - CF_DNS_API_TOKEN=${CF_DNS_API_TOKEN}
       - TZ=${TZ:-Europe/London}
+      - DOCKER_API_VERSION=1.52
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ${DATA_DIR}/letsencrypt:/letsencrypt
+      - /mnt/user/appdata/letsencrypt:/letsencrypt
     dns:
       - 100.100.100.100
       - 1.1.1.1
