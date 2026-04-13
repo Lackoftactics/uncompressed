@@ -25,10 +25,18 @@ My family uses [Seerr](https://github.com/fallenbagel/jellyseerr) to request mov
 
 ## Quick Start
 
-**Fast track** — guided wizard that prompts for every variable, creates `.env`, symlinks, and the Docker network:
+**Fast track** — download and run the guided setup wizard (no git required):
 
 ```bash
-./setup.sh
+curl -L https://github.com/Lackoftactics/uncompressed/archive/main.tar.gz | tar xz
+cd uncompressed-main && ./setup.sh
+```
+
+Or with git (gives you `git pull` for future updates):
+
+```bash
+git clone https://github.com/Lackoftactics/uncompressed.git
+cd uncompressed && ./setup.sh
 ```
 
 **Manual setup** — if you prefer to do it yourself:
