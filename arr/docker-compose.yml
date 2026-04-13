@@ -99,8 +99,6 @@ services:
       PGID:             ${PGID:-100}
       TZ:               ${TZ:-Europe/Warsaw}
       WEBUI_PORT:       8080
-      WEBUI_USERNAME:   ${QB_USERNAME:-admin}
-      WEBUI_PASSWORD:   ${QB_PASSWORD:?Set QB_PASSWORD in .env}
       TORRENTING_PORT:  51413
       BIND_TO_INTERFACE: tun0  # Bind qBittorrent to the VPN interface
     volumes:
