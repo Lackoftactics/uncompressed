@@ -2,6 +2,12 @@
 .env
 **/.env
 
+# Auto-downloaded gum binary (setup.sh)
+.bin/
+
+# Sibling repo (cloned separately, has its own git)
+homelab/
+
 
 # Logs
 *.log

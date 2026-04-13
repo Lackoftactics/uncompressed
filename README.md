@@ -25,12 +25,24 @@ My family uses [Seerr](https://github.com/fallenbagel/jellyseerr) to request mov
 
 ## Quick Start
 
+**Fast track** — guided wizard that prompts for every variable, creates `.env`, symlinks, and the Docker network:
+
+```bash
+./setup.sh
+```
+
+**Manual setup** — if you prefer to do it yourself:
+
 ```bash
 cp .env.example .env              # fill in secrets, domain, Tailscale IP, WG keys, CF token
 ln -s ../.env arr/.env            # each compose stack reads its own .env
 ln -s ../.env infra/.env
 docker network create traefik_proxy
+```
 
+Then start the stack:
+
+```bash
 cd infra && docker compose up -d  # traefik first
 cd ../arr && docker compose up -d # media pipeline (9 containers)
 ```
