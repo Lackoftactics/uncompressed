@@ -22,7 +22,7 @@ services:
       - TZ=${TZ:-Europe/London}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /mnt/user/appdata/letsencrypt:/letsencrypt
+      - ${DATA_DIR}/letsencrypt:/letsencrypt
     dns:
       - 100.100.100.100
       - 1.1.1.1

@@ -68,7 +68,7 @@ services:
       VPN_PORT_FORWARDING_UP_COMMAND: /bin/sh -c 'wget -O- --retry-connrefused --wait=5 --tries=10 --post-data "json={\"listen_port\":{{PORTS}}}" http://127.0.0.1:8080/api/v2/app/setPreferences 2>&1'
       UPDATER_PERIOD:             24h
     volumes:
-      - /mnt/user/appdata/gluetun:/gluetun
+      - ${DATA_DIR}/gluetun:/gluetun
     networks:
       - traefik_proxy
       - vpn_network
@@ -105,8 +105,8 @@ services:
       TORRENTING_PORT:  51413
       BIND_TO_INTERFACE: tun0  # Bind qBittorrent to the VPN interface
     volumes:
-      - /mnt/user/appdata/qbittorrent:/config
-      - /mnt/user/media/downloads/qbittorrent:/downloads
+      - ${DATA_DIR}/qbittorrent:/config
+      - ${DOWNLOADS_DIR}:/downloads
       - ./qbittorrent-init/10-config.sh:/etc/cont-init.d/10-config.sh:ro
     restart: unless-stopped
     healthcheck:
@@ -130,9 +130,9 @@ services:
       retries: 3
       start_period: 30s
     volumes:
-      - /mnt/user/appdata/jellyfin:/config
-      - /mnt/user/media/movies:/data/movies
-      - /mnt/user/media/tv:/data/tvshows
+      - ${DATA_DIR}/jellyfin:/config
+      - ${MEDIA_MOVIES_DIR}:/data/movies
+      - ${MEDIA_TV_DIR}:/data/tvshows
     restart: unless-stopped
     networks:
       - traefik_proxy
@@ -160,9 +160,9 @@ services:
       - traefik_proxy
       - arr_internal
     volumes:
-      - /mnt/user/appdata/sonarr:/config
-      - /mnt/user/media/tv:/tv
-      - /mnt/user/media/downloads/qbittorrent:/downloads
+      - ${DATA_DIR}/sonarr:/config
+      - ${MEDIA_TV_DIR}:/tv
+      - ${DOWNLOADS_DIR}:/downloads
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8989/health"]
@@ -189,9 +189,9 @@ services:
       - traefik_proxy
       - arr_internal
     volumes:
-      - /mnt/user/appdata/radarr:/config
-      - /mnt/user/media/movies:/movies
-      - /mnt/user/media/downloads/qbittorrent:/downloads
+      - ${DATA_DIR}/radarr:/config
+      - ${MEDIA_MOVIES_DIR}:/movies
+      - ${DOWNLOADS_DIR}:/downloads
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:7878/health"]
@@ -218,7 +218,7 @@ services:
       - traefik_proxy
       - arr_internal
     volumes:
-      - /mnt/user/appdata/prowlarr:/config
+      - ${DATA_DIR}/prowlarr:/config
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9696/health"]
@@ -248,7 +248,7 @@ services:
       PGID: ${PGID:-1000}
       TZ:   ${TZ:-Europe/Warsaw}
     volumes:
-      - /mnt/user/appdata/seerr/config:/config
+      - ${DATA_DIR}/seerr/config:/config
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:5055/health"]
@@ -275,9 +275,9 @@ services:
       - traefik_proxy
       - arr_internal
     volumes:
-      - /mnt/user/appdata/bazarr:/config
-      - /mnt/user/media/movies:/movies
-      - /mnt/user/media/tv:/tv
+      - ${DATA_DIR}/bazarr:/config
+      - ${MEDIA_MOVIES_DIR}:/movies
+      - ${MEDIA_TV_DIR}:/tv
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:6767/health"]
