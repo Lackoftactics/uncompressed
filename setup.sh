@@ -267,14 +267,44 @@ else
   ok "Created traefik_proxy network"
 fi
 
-# ── Done ───────────────────────────────────────────────────────────
+# ── Start stack ────────────────────────────────────────────────────
 echo ""
-gum style \
-  --border double --padding "1 3" --margin "0 2" \
-  --border-foreground "$OK" --foreground "$OK" --bold \
-  "Setup complete!" \
-  "" \
-  "$(gum style --faint --foreground "$MUTED" 'Start the stack:')" \
-  "$(gum style --foreground 7 '  cd infra && docker compose up -d')" \
-  "$(gum style --foreground 7 '  cd ../arr && docker compose up -d')"
+if gum confirm \
+  --prompt.foreground "$ACCENT" \
+  --selected.background "$ACCENT" \
+  "Start the stack now?"; then
+
+  gum spin \
+    --spinner dot \
+    --spinner.foreground "$ACCENT" \
+    --title "Starting Traefik..." -- \
+    docker compose -f "$REPO_DIR/infra/docker-compose.yml" up -d
+  ok "Traefik is up"
+
+  gum spin \
+    --spinner dot \
+    --spinner.foreground "$ACCENT" \
+    --title "Starting media pipeline (9 containers)..." -- \
+    docker compose -f "$REPO_DIR/arr/docker-compose.yml" up -d
+  ok "Media pipeline is up"
+
+  echo ""
+  gum style \
+    --border double --padding "1 3" --margin "0 2" \
+    --border-foreground "$OK" --foreground "$OK" --bold \
+    "All services running!" \
+    "" \
+    "$(gum style --faint --foreground "$MUTED" 'Check status:')" \
+    "$(gum style --foreground 7 '  docker compose -f arr/docker-compose.yml ps')"
+else
+  echo ""
+  gum style \
+    --border double --padding "1 3" --margin "0 2" \
+    --border-foreground "$OK" --foreground "$OK" --bold \
+    "Setup complete!" \
+    "" \
+    "$(gum style --faint --foreground "$MUTED" 'Start the stack when ready:')" \
+    "$(gum style --foreground 7 '  docker compose -f infra/docker-compose.yml up -d')" \
+    "$(gum style --foreground 7 '  docker compose -f arr/docker-compose.yml up -d')"
+fi
 echo ""

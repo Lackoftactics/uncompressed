@@ -48,11 +48,11 @@ ln -s ../.env infra/.env
 docker network create traefik_proxy
 ```
 
-Then start the stack:
+Then start the stack (from the repo root — no `cd` needed):
 
 ```bash
-cd infra && docker compose up -d  # traefik first
-cd ../arr && docker compose up -d # media pipeline (9 containers)
+docker compose -f infra/docker-compose.yml up -d  # traefik first
+docker compose -f arr/docker-compose.yml up -d     # media pipeline (9 containers)
 ```
 
 Each compose file declares `env_file: ./.env`, resolved relative to its own directory — so `arr/docker-compose.yml` needs `arr/.env`. Symlinking keeps one source of truth at the repo root.
