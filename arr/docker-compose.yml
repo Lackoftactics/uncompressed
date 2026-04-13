@@ -99,7 +99,7 @@ services:
       PGID:             ${PGID:-100}
       TZ:               ${TZ:-Europe/Warsaw}
       WEBUI_PORT:       8080
-      TORRENTING_PORT:  51413
+      TORRENTING_PORT:  ${BT_PORT}
       BIND_TO_INTERFACE: tun0  # Bind qBittorrent to the VPN interface
     volumes:
       - ${DATA_DIR}/qbittorrent:/config
