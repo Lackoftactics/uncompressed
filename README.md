@@ -57,6 +57,27 @@ docker compose -f arr/docker-compose.yml up -d     # media pipeline (9 container
 
 Each compose file declares `env_file: ./.env`, resolved relative to its own directory — so `arr/docker-compose.yml` needs `arr/.env`. Symlinking keeps one source of truth at the repo root.
 
+To configure each service, be sure to use docker internal DNS to let services reach each other on the network `arr_internal` :
+- http://prowlarr:9696
+- http://radarr:7878
+- http://gluetun:8080 (qbittorrent)
+- http://jellyfin:8096
+- http://sonarr:8989
+- http://bazarr:6767
+- http://seerr:5055
+
+This is the list of subdomains for which you must create `A` records pointing to the Tailscale IP of the machine that hosts Traefik:
+- traefik
+- bazarr
+- jellyfin
+- prowlarr
+- qbit
+- radarr
+- seerr
+- sonarr
+
+Note: create full FQDNs (e.g., traefik.example.com) in your DNS zone (alternatively, add them to your hosts file), each pointing to your host's Tailscale IP.
+
 ## Networking & Security
 
 This is the part that's actually interesting. The services themselves are standard — the value is in how they're wired together.
