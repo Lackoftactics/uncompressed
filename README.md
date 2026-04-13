@@ -67,7 +67,7 @@ To configure each service, be sure to use docker internal DNS to let services re
 - http://bazarr:6767
 - http://seerr:5055
 
-### Domains
+### Subdomains
 This is the list of subdomains for which you must create `A` records pointing to the Tailscale IP of the machine that hosts Traefik:
 - traefik
 - bazarr
