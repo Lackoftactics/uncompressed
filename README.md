@@ -61,7 +61,7 @@ Each compose file declares `env_file: ./.env`, resolved relative to its own dire
 
 This is the part that's actually interesting. The services themselves are standard — the value is in how they're wired together.
 
-**VPN namespace isolation** — qBittorrent doesn't just "use" the VPN. It runs inside gluetun's network namespace (`network_mode: service:gluetun`), meaning it shares gluetun's entire network stack. The container has no network interface of its own. An init script ([`10-config.sh`](arr/qbittorrent-init/10-config.sh)) additionally forces `BIND_TO_INTERFACE: tun0` as defense in depth. If the VPN drops, there is no path for traffic to take — it's a kernel boundary, not a firewall rule that could be misconfigured.
+**VPN namespace isolation** — qBittorrent and Prowlarr don't just "use" the VPN. They run inside gluetun's network namespace (`network_mode: service:gluetun`), meaning they share gluetun's entire network stack. The containers have no network interface of their own. An init script ([`10-config.sh`](arr/qbittorrent-init/10-config.sh)) additionally forces `BIND_TO_INTERFACE: tun0` on qBittorrent as defense in depth. If the VPN drops, there is no path for traffic to take — it's a kernel boundary, not a firewall rule that could be misconfigured.
 
 **No published ports, with one exception** — only Jellyfin publishes `:8096` to the host so LAN clients (Infuse, Apple TV) can hit it directly. Everything else is reachable only through Traefik over the Docker network — there's no way to hit Sonarr/Radarr/Prowlarr/etc. by going to `host:port` and bypassing TLS + security headers.
 
