@@ -60,6 +60,9 @@ services:
       VPN_PORT_FORWARD_ONLY:      "on"
       PORT_FORWARD_ONLY:          "on"
       FIREWALL_VPN_INPUT_PORTS:    "8080,9999"
+      # Allow traffic to docker subnets so prowlarr (sharing this netns)
+      # can reach sonarr/radarr laterally without going through the VPN.
+      FIREWALL_OUTBOUND_SUBNETS:   "172.16.0.0/12"
       HEALTH_SERVER_ADDRESS: 0.0.0.0:9999
       # DNS Configuration for better resolution
       DNS: 1.1.1.1,8.8.8.8
@@ -70,9 +73,13 @@ services:
     volumes:
       - ${DATA_DIR}/gluetun:/gluetun
     networks:
-      - traefik_proxy
-      - vpn_network
-      - arr_internal
+      traefik_proxy:
+      vpn_network:
+      arr_internal:
+        # Alias so sonarr/radarr can keep using http://prowlarr:9696
+        # even though prowlarr now shares gluetun's network namespace.
+        aliases:
+          - prowlarr
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:9999/health"]
       interval: 30s
@@ -88,6 +95,13 @@ services:
       traefik.http.routers.qbittorrent-secure.tls.certresolver:      letsencrypt
       traefik.http.routers.qbittorrent-secure.service:               qbittorrent-svc
       traefik.http.services.qbittorrent-svc.loadbalancer.server.port: "8080"
+      # Prowlarr (shares gluetun's network namespace — Traefik routes here)
+      traefik.http.routers.prowlarr-secure.entrypoints:              websecure
+      traefik.http.routers.prowlarr-secure.rule:                     Host(`prowlarr.${DOMAIN_NAME}`)
+      traefik.http.routers.prowlarr-secure.tls:                      "true"
+      traefik.http.routers.prowlarr-secure.tls.certresolver:         letsencrypt
+      traefik.http.routers.prowlarr-secure.service:                  prowlarr-svc
+      traefik.http.services.prowlarr-svc.loadbalancer.server.port:   "9696"
   qbittorrent:
     image: linuxserver/qbittorrent:5.1.4
     container_name: qbittorrent
@@ -210,13 +224,13 @@ services:
   prowlarr:
     image: linuxserver/prowlarr:2.3.5
     container_name: prowlarr
+    # Share gluetun's network namespace so all indexer traffic exits via VPN.
+    # Traefik labels and network aliases live on the gluetun service.
+    network_mode: "service:gluetun"
     depends_on:
       gluetun:
         condition: service_healthy
     environment: *arr-env
-    networks:
-      - traefik_proxy
-      - arr_internal
     volumes:
       - ${DATA_DIR}/prowlarr:/config
     restart: unless-stopped
@@ -226,14 +240,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
-    labels:
-      traefik.enable: "true"
-      traefik.http.routers.prowlarr-secure.entrypoints:              websecure
-      traefik.http.routers.prowlarr-secure.rule:                     Host(`prowlarr.${DOMAIN_NAME}`)
-      traefik.http.routers.prowlarr-secure.tls:                      "true"
-      traefik.http.routers.prowlarr-secure.tls.certresolver:         letsencrypt
-      traefik.http.routers.prowlarr-secure.service:                  prowlarr-svc
-      traefik.http.services.prowlarr-svc.loadbalancer.server.port:   "9696"
   seerr:
     image: ghcr.io/seerr-team/seerr:v3.1.0
     container_name: seerr
