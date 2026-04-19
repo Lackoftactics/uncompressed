@@ -59,7 +59,7 @@ services:
       VPN_PORT_FORWARDING_PROVIDER: protonvpn
       VPN_PORT_FORWARD_ONLY:      "on"
       PORT_FORWARD_ONLY:          "on"
-      FIREWALL_VPN_INPUT_PORTS:    "8080,9999"
+      FIREWALL_VPN_INPUT_PORTS:    "8080,9696,9999"
       HEALTH_SERVER_ADDRESS: 0.0.0.0:9999
       # DNS Configuration for better resolution
       DNS: 1.1.1.1,8.8.8.8
@@ -88,6 +88,13 @@ services:
       traefik.http.routers.qbittorrent-secure.tls.certresolver:      letsencrypt
       traefik.http.routers.qbittorrent-secure.service:               qbittorrent-svc
       traefik.http.services.qbittorrent-svc.loadbalancer.server.port: "8080"
+      # Prowlarr — routed through gluetun's network namespace
+      traefik.http.routers.prowlarr-secure.entrypoints:              websecure
+      traefik.http.routers.prowlarr-secure.rule:                     Host(`prowlarr.${DOMAIN_NAME}`)
+      traefik.http.routers.prowlarr-secure.tls:                      "true"
+      traefik.http.routers.prowlarr-secure.tls.certresolver:         letsencrypt
+      traefik.http.routers.prowlarr-secure.service:                  prowlarr-svc
+      traefik.http.services.prowlarr-svc.loadbalancer.server.port:   "9696"
   qbittorrent:
     image: linuxserver/qbittorrent:5.1.4
     container_name: qbittorrent
@@ -210,13 +217,11 @@ services:
   prowlarr:
     image: linuxserver/prowlarr:2.3.5
     container_name: prowlarr
+    network_mode: "service:gluetun"
     depends_on:
       gluetun:
         condition: service_healthy
     environment: *arr-env
-    networks:
-      - traefik_proxy
-      - arr_internal
     volumes:
       - ${DATA_DIR}/prowlarr:/config
     restart: unless-stopped
@@ -226,14 +231,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
-    labels:
-      traefik.enable: "true"
-      traefik.http.routers.prowlarr-secure.entrypoints:              websecure
-      traefik.http.routers.prowlarr-secure.rule:                     Host(`prowlarr.${DOMAIN_NAME}`)
-      traefik.http.routers.prowlarr-secure.tls:                      "true"
-      traefik.http.routers.prowlarr-secure.tls.certresolver:         letsencrypt
-      traefik.http.routers.prowlarr-secure.service:                  prowlarr-svc
-      traefik.http.services.prowlarr-svc.loadbalancer.server.port:   "9696"
   seerr:
     image: ghcr.io/seerr-team/seerr:v3.1.0
     container_name: seerr
