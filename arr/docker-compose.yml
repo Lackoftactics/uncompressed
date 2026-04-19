@@ -48,17 +48,16 @@ services:
       VPN_SERVICE_PROVIDER:       protonvpn
       VPN_TYPE:                   wireguard
       WIREGUARD_PRIVATE_KEY:      ${WG_PRIVATE_KEY}
-      WIREGUARD_PUBLIC_KEY:       ${WG_PUBLIC_KEY}
+      OPENVPN_USER:               ${PROTONVPN_USERNAME}
+      OPENVPN_PASSWORD:           ${PROTONVPN_PASSWORD}
       WIREGUARD_ADDRESSES:        ${WG_ADDRESSES:-10.2.0.2/32}
       # Improved stability settings
       WIREGUARD_PERSISTENT_KEEPALIVE_INTERVAL: 25s # Increased for better stability
       SERVER_COUNTRIES:           Netherlands,Switzerland
       SERVER_FEATURES:            p2p
       # Port-forwarding
-      VPN_PORT_FORWARDING:        "on"
-      VPN_PORT_FORWARDING_PROVIDER: protonvpn
-      VPN_PORT_FORWARD_ONLY:      "on"
-      PORT_FORWARD_ONLY:          "on"
+      VPN_PORT_FORWARDING:        on
+      PORT_FORWARD_ONLY:          on
       FIREWALL_VPN_INPUT_PORTS:    "8080,9999"
       HEALTH_SERVER_ADDRESS: 0.0.0.0:9999
       # DNS Configuration for better resolution
@@ -100,9 +99,7 @@ services:
       PGID:             ${PGID:-100}
       TZ:               ${TZ:-Europe/Warsaw}
       WEBUI_PORT:       8080
-      WEBUI_USERNAME:   ${QB_USERNAME:-admin}
-      WEBUI_PASSWORD:   ${QB_PASSWORD:?Set QB_PASSWORD in .env}
-      TORRENTING_PORT:  51413
+      TORRENTING_PORT:  ${BT_PORT}
       BIND_TO_INTERFACE: tun0  # Bind qBittorrent to the VPN interface
     volumes:
       - ${DATA_DIR}/qbittorrent:/config
@@ -248,7 +245,7 @@ services:
       PGID: ${PGID:-1000}
       TZ:   ${TZ:-Europe/Warsaw}
     volumes:
-      - ${DATA_DIR}/seerr/config:/config
+      - ${DATA_DIR}/seerr/config:/app/config
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:5055/health"]
