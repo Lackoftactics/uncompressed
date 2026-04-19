@@ -89,3 +89,5 @@ wheels/
 # Application specific data that shouldn't be in git
 **/data/
 **/config/
+
+.fuse_hidden*
