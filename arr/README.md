@@ -9,7 +9,7 @@ VPN-isolated media acquisition and streaming stack. 9 containers with self-heali
 - **jellyfin** — Media server with hardware transcoding (`/dev/dri`). Serves lossless remuxes.
 - **sonarr** — TV show management and automation.
 - **radarr** — Movie management and automation.
-- **prowlarr** — Indexer manager for Sonarr/Radarr. Runs inside gluetun's network namespace — all indexer traffic exits through the VPN.
+- **prowlarr** — Indexer manager for Sonarr/Radarr.
 - **seerr** — Media request interface for end users.
 - **bazarr** — Automated subtitle downloads.
 - **auto-heal** — Monitors all containers, restarts any that fail health checks.
@@ -22,9 +22,7 @@ VPN-isolated media acquisition and streaming stack. 9 containers with self-heali
 
 ## Notes
 
-- qBittorrent and Prowlarr use `network_mode: service:gluetun` for VPN namespace isolation. Neither container has a network interface of its own — if the VPN drops, there is no path for traffic to take.
-- qBittorrent additionally sets `BIND_TO_INTERFACE: tun0` as defense in depth.
+- qBittorrent uses `network_mode: service:gluetun` for VPN namespace isolation, plus `BIND_TO_INTERFACE: tun0` as defense in depth.
 - All *arr services depend on gluetun with `condition: service_healthy` — they won't start until the VPN is up.
 - YAML extension fields (`x-arr-env`, `x-arr-healthcheck`, `x-restart-policy`) reduce duplication across services.
 - Port forwarding is handled automatically via ProtonVPN's native port forwarding, with gluetun pushing the forwarded port to qBittorrent's API.
-- Because Prowlarr runs in gluetun's network namespace, Sonarr and Radarr must reach it at `http://gluetun:9696` (not `http://prowlarr:9696`). Update the Prowlarr URL in Sonarr/Radarr settings accordingly.
