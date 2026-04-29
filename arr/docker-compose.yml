@@ -59,7 +59,7 @@ services:
       VPN_PORT_FORWARDING_PROVIDER: protonvpn
       VPN_PORT_FORWARD_ONLY:      "on"
       PORT_FORWARD_ONLY:          "on"
-      FIREWALL_VPN_INPUT_PORTS:    "8080,9999"
+      FIREWALL_VPN_INPUT_PORTS:    "8080,9696,9999"
       # Allow traffic to docker subnets so prowlarr (sharing this netns)
       # can reach sonarr/radarr laterally without going through the VPN.
       FIREWALL_OUTBOUND_SUBNETS:   "172.16.0.0/12"
@@ -316,4 +316,3 @@ services:
       - arr_internal
       - traefik_proxy
       - vpn_network
-
