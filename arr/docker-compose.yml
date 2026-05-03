@@ -102,6 +102,9 @@ services:
       traefik.http.routers.prowlarr-secure.tls.certresolver:         letsencrypt
       traefik.http.routers.prowlarr-secure.service:                  prowlarr-svc
       traefik.http.services.prowlarr-svc.loadbalancer.server.port:   "9696"
+      traefik.http.services.prowlarr-svc.loadbalancer.healthcheck.path:     "/ping"
+      traefik.http.services.prowlarr-svc.loadbalancer.healthcheck.interval: "30s"
+      traefik.http.services.prowlarr-svc.loadbalancer.healthcheck.timeout:  "5s"
   qbittorrent:
     image: linuxserver/qbittorrent:5.1.4
     container_name: qbittorrent
@@ -235,7 +238,7 @@ services:
       - ${DATA_DIR}/prowlarr:/config
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9696/health"]
+      test: ["CMD", "curl", "-fsS", "http://localhost:9696/ping"]
       interval: 1m
       timeout: 10s
       retries: 3
