@@ -60,9 +60,9 @@ services:
       VPN_PORT_FORWARD_ONLY:      "on"
       PORT_FORWARD_ONLY:          "on"
       FIREWALL_VPN_INPUT_PORTS:    "8080,9696,9999"
-      # Allow traffic to docker subnets so prowlarr (sharing this netns)
+      # Allow traffic to all RFC1918 docker subnets so prowlarr (sharing this netns)
       # can reach sonarr/radarr laterally without going through the VPN.
-      FIREWALL_OUTBOUND_SUBNETS:   "172.16.0.0/12"
+      FIREWALL_OUTBOUND_SUBNETS:   "172.16.0.0/12,10.0.0.0/8,192.168.0.0/16"
       HEALTH_SERVER_ADDRESS: 0.0.0.0:9999
       # DNS Configuration for better resolution
       DNS: 1.1.1.1,8.8.8.8
@@ -83,9 +83,9 @@ services:
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:9999/health"]
       interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 60s
     labels:
       traefik.enable: "true"
       # qBittorrent
@@ -237,12 +237,13 @@ services:
     volumes:
       - ${DATA_DIR}/prowlarr:/config
     restart: unless-stopped
+    stop_grace_period: 30s
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:9696/ping"]
       interval: 1m
       timeout: 10s
-      retries: 3
-      start_period: 30s
+      retries: 5
+      start_period: 90s
   seerr:
     image: ghcr.io/seerr-team/seerr:v3.1.0
     container_name: seerr
